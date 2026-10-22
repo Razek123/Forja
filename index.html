@@ -1,0 +1,668 @@
+<!DOCTYPE html>
+<html lang="es" class="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="theme-color" content="#111315" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="FORJA" />
+  <title>FORJA — Taller de Ideas y Proyectos</title>
+  
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            carbon: '#111315',
+            steel: '#1C1F24',
+            steelLight: '#2D323B',
+            magma: '#FF5E00',
+            gold: '#FFAA00',
+            titanium: '#F3F4F6'
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap');
+    
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: #111315;
+      color: #F3F4F6;
+      overflow-x: hidden;
+    }
+    .mono { font-family: 'JetBrains Mono', monospace; }
+
+    /* Animación de las barras de sonido del Yunque cuando graba */
+    @keyframes pulseBar1 { 0%, 100% { transform: scaleY(1); } 50% { transform: scaleY(1.6); } }
+    @keyframes pulseBar2 { 0%, 100% { transform: scaleY(1); } 50% { transform: scaleY(0.4); } }
+    @keyframes pulseBar3 { 0%, 100% { transform: scaleY(1); } 50% { transform: scaleY(1.35); } }
+
+    .recording .bar-1 { animation: pulseBar1 0.45s infinite ease-in-out; transform-origin: bottom; }
+    .recording .bar-2 { animation: pulseBar2 0.35s infinite ease-in-out; transform-origin: bottom; }
+    .recording .bar-3 { animation: pulseBar3 0.3s infinite ease-in-out; transform-origin: bottom; }
+
+    .recording-glow {
+      box-shadow: 0 0 35px rgba(255, 94, 0, 0.55), inset 0 0 15px rgba(255, 170, 0, 0.3);
+      border-color: #FF5E00 !important;
+    }
+
+    /* Scrollbar limpio */
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: #111315; }
+    ::-webkit-scrollbar-thumb { background: #2D323B; border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: #FF5E00; }
+  </style>
+</head>
+
+<body class="min-h-screen flex flex-col justify-between pb-28">
+
+  <!-- HEADER SUPERIOR -->
+  <header class="sticky top-0 z-30 bg-carbon/90 backdrop-blur-md border-b border-steelLight px-4 py-3">
+    <div class="max-w-4xl mx-auto flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <!-- Mini Logo Yunque -->
+        <div class="w-10 h-10 rounded-xl bg-steel border border-steelLight flex items-center justify-center shadow-inner">
+          <svg viewBox="0 0 512 512" class="w-8 h-8">
+            <rect x="136" y="140" width="24" height="75" rx="12" fill="#FF5E00"/>
+            <rect x="191" y="95" width="26" height="120" rx="13" fill="#FF7700"/>
+            <rect x="243" y="55" width="28" height="160" rx="14" fill="#FFAA00"/>
+            <rect x="297" y="95" width="26" height="120" rx="13" fill="#FF7700"/>
+            <rect x="354" y="140" width="24" height="75" rx="12" fill="#FF5E00"/>
+            <path d="M 65 245 L 155 235 L 435 235 L 410 285 L 335 295 L 175 295 L 130 275 Z" fill="#3A414E"/>
+            <polygon points="185,300 327,300 350,385 162,385" fill="#252A34"/>
+            <polygon points="125,390 387,390 415,440 97,440" fill="#3A414E"/>
+          </svg>
+        </div>
+        <div>
+          <h1 class="font-extrabold text-lg tracking-wider text-white flex items-center gap-2">
+            FORJA <span class="text-[10px] mono uppercase px-2 py-0.5 rounded bg-magma/20 text-magma border border-magma/40">v1.0</span>
+          </h1>
+          <p class="text-xs text-gray-400">Taller Personal de Ideas y Planos</p>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-2">
+        <button onclick="exportBackup()" title="Descargar Respaldo JSON" class="p-2 rounded-lg bg-steel border border-steelLight text-gray-300 hover:text-white hover:border-magma transition text-xs mono">
+          ⬇️ Backup
+        </button>
+        <button onclick="toggleModal('settingsModal')" class="p-2 rounded-lg bg-steel border border-steelLight text-gray-300 hover:text-magma hover:border-magma transition">
+          ⚙️ API IA
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- CONTENIDO PRINCIPAL -->
+  <main class="max-w-4xl w-full mx-auto px-4 pt-5 flex-1">
+    
+    <!-- BARRA DE BÚSQUEDA Y FILTRO DE MOLDES (CARPETAS) -->
+    <div class="mb-6 space-y-3">
+      <div class="relative">
+        <input 
+          id="searchInput" 
+          type="text" 
+          oninput="renderIdeas()"
+          placeholder="Buscar en la forja (ej. Gumiland, QR, Draftea, cámara...)" 
+          class="w-full bg-steel border border-steelLight rounded-xl pl-10 pr-4 py-3 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-magma transition"
+        />
+        <span class="absolute left-3.5 top-3.5 text-gray-400">🔍</span>
+      </div>
+
+      <!-- Carrusel de Moldes (Carpetas) -->
+      <div id="foldersContainer" class="flex items-center gap-2 overflow-x-auto pb-1">
+        <!-- Se llena dinámicamente -->
+      </div>
+    </div>
+
+    <!-- ZONA DE CAPTURA / MODO FUNDICIÓN (PANTALLA 1 & 2) -->
+    <section class="bg-steel border border-steelLight rounded-2xl p-5 mb-7 shadow-xl relative overflow-hidden">
+      <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 mb-4">
+        <div>
+          <h2 class="text-sm font-bold uppercase tracking-wider text-magma flex items-center gap-1.5">
+            <span>🔥</span> Zona de Fundición (Materia Prima)
+          </h2>
+          <p class="text-xs text-gray-400">Toca el Yunque para dictar por voz o escribe tu idea en bruto abajo.</p>
+        </div>
+
+        <!-- Selector de Modo Soldadura -->
+        <div class="w-full sm:w-auto">
+          <select id="weldSelect" class="w-full sm:w-56 bg-carbon border border-steelLight rounded-lg px-3 py-1.5 text-xs text-gray-300 focus:outline-none focus:border-magma">
+            <option value="NEW">🆕 Crear Plano Nuevo</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Área de Texto + Botón del Yunque Sonoro -->
+      <div class="flex flex-col md:flex-row gap-4 items-center">
+        
+        <!-- Botón Central: EL YUNQUE SONORO -->
+        <button 
+          id="anvilBtn" 
+          onclick="toggleRecording()"
+          class="w-28 h-28 rounded-3xl bg-carbon border-2 border-steelLight flex flex-col items-center justify-center shrink-0 transition-all duration-300 hover:border-magma group relative"
+        >
+          <svg id="anvilSvg" viewBox="0 0 512 512" class="w-16 h-16">
+            <defs>
+              <linearGradient id="magmaG" x1="0%" y1="100%" x2="0%" y2="0%">
+                <stop offset="0%" stop-color="#FF4500"/>
+                <stop offset="100%" stop-color="#FFCC00"/>
+              </linearGradient>
+              <linearGradient id="steelG" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stop-color="#4A5262"/>
+                <stop offset="100%" stop-color="#1E222A"/>
+              </linearGradient>
+            </defs>
+            <!-- Ondas de voz reactivas -->
+            <g>
+              <rect class="bar-1" x="136" y="140" width="24" height="75" rx="12" fill="url(#magmaG)"/>
+              <rect class="bar-2" x="191" y="95" width="26" height="120" rx="13" fill="url(#magmaG)"/>
+              <rect class="bar-3" x="243" y="50" width="28" height="165" rx="14" fill="url(#magmaG)"/>
+              <rect class="bar-2" x="297" y="95" width="26" height="120" rx="13" fill="url(#magmaG)"/>
+              <rect class="bar-1" x="354" y="140" width="24" height="75" rx="12" fill="url(#magmaG)"/>
+            </g>
+            <!-- Yunque -->
+            <path d="M 75 245 L 155 235 L 425 235 L 405 280 L 335 290 L 175 290 L 140 275 Z" fill="url(#steelG)"/>
+            <rect x="145" y="232" width="260" height="6" rx="3" fill="#FF5E00"/>
+            <polygon points="185,295 327,295 347,375 165,375" fill="#1E222A"/>
+            <path d="M 235 315 L 280 315 M 235 315 L 235 355 M 235 335 L 268 335" stroke="#FF5E00" stroke-width="8" stroke-linecap="round"/>
+            <polygon points="135,382 377,382 405,430 107,430" fill="url(#steelG)"/>
+          </svg>
+          <span id="micStatusText" class="text-[11px] font-bold mono text-gray-400 group-hover:text-white mt-1">
+            🎙️ DICTAR
+          </span>
+        </button>
+
+        <!-- Cuadro de Materia Prima -->
+        <div class="flex-1 w-full">
+          <textarea 
+            id="rawInput" 
+            rows="4" 
+            placeholder="Habla tocando el yunque o escribe aquí tu idea sin preocuparte por el orden... Ejemplo: 'Quiero agregarle a la app de apuestas una calculadora que divida mis 500 pesos en 3 jugadas seguras...'"
+            class="w-full bg-carbon border border-steelLight rounded-xl p-3.5 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-magma resize-none"
+          ></textarea>
+          
+          <div class="flex flex-wrap items-center justify-between gap-2 mt-2.5">
+            <select id="folderSelect" class="bg-carbon border border-steelLight rounded-lg px-3 py-2 text-xs text-gray-300 focus:outline-none focus:border-magma">
+              <option value="AUTO">🤖 Carpeta Automática (IA)</option>
+              <option value="Gumi Gumiland">🌸 Gumi Gumiland</option>
+              <option value="App Apuestas">🎰 App Apuestas</option>
+              <option value="Cabina LGHT">📸 Cabina LGHT</option>
+              <option value="Apps & Software">💻 Apps & Software</option>
+              <option value="Taller & CNC">🪵 Taller & CNC</option>
+            </select>
+
+            <button 
+              id="forgeBtn"
+              onclick="forgeIdea()" 
+              class="px-5 py-2.5 rounded-xl bg-gradient-to-r from-magma to-gold text-carbon font-extrabold text-xs uppercase tracking-wider hover:opacity-95 transition shadow-lg flex items-center gap-2"
+            >
+              <span>🔨 Forjar Plano</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Barra de Estado de Fundición -->
+      <div id="forgingLoader" class="hidden mt-4 pt-3 border-t border-steelLight flex items-center justify-center gap-3 text-gold text-xs mono">
+        <span class="animate-spin text-base">⚙️</span>
+        <span id="loaderText">Fundiendo materia prima con el Maestro de Taller...</span>
+      </div>
+    </section>
+
+    <!-- LISTA DE PLANOS FORJADOS -->
+    <div class="flex items-center justify-between mb-3">
+      <h3 class="text-xs font-bold uppercase tracking-wider text-gray-400 mono">
+        🗂️ Planos en la Bóveda (<span id="ideasCount">0</span>)
+      </h3>
+    </div>
+
+    <div id="ideasGrid" class="space-y-4">
+      <!-- Se renderizan las tarjetas de ideas aquí -->
+    </div>
+
+  </main>
+
+  <!-- MODAL DE CONFIGURACIÓN DE API KEY -->
+  <div id="settingsModal" class="hidden fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-steel border border-steelLight rounded-2xl max-w-md w-full p-6 shadow-2xl">
+      <div class="flex items-center justify-between mb-4">
+        <h3 class="font-bold text-base text-white flex items-center gap-2">⚙️ Motor IA del Maestro de Taller</h3>
+        <button onclick="toggleModal('settingsModal')" class="text-gray-400 hover:text-white">✕</button>
+      </div>
+      <p class="text-xs text-gray-300 mb-3 leading-relaxed">
+        Pega tu <strong>Gemini API Key</strong> gratuita de Google AI Studio para que FORJA redacte, estructure y detecte puntos ciegos automáticamente. Si lo dejas vacío, FORJA usará el estructurador local rápido.
+      </p>
+      <input 
+        id="apiKeyInput" 
+        type="password" 
+        placeholder="AIzaSy..." 
+        class="w-full bg-carbon border border-steelLight rounded-xl px-3.5 py-2.5 text-sm text-white mono mb-4 focus:outline-none focus:border-magma"
+      />
+      <div class="flex justify-end gap-2">
+        <button onclick="toggleModal('settingsModal')" class="px-4 py-2 rounded-lg bg-carbon text-xs text-gray-300">Cancelar</button>
+        <button onclick="saveApiKey()" class="px-4 py-2 rounded-lg bg-magma text-xs font-bold text-white">Guardar Motor</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- LÓGICA DE LA APLICACIÓN -->
+  <script>
+    // --- BASE DE DATOS INICIAL (Con tus 3 ideas precargadas) ---
+    const INITIAL_IDEAS = [
+      {
+        id: 'idea-gumiland',
+        title: 'App de Fidelización y Pedidos — Gumi Gumiland',
+        folder: 'Gumi Gumiland',
+        date: '21 Oct 2026',
+        core: 'Aplicación dual (Administradora para Mar y App de Cliente gratuita) para gestionar pedidos de amigurumis, automatizar avisos de entrega y premiar la lealtad mediante sellos QR.',
+        blocks: [
+          'Tarjeta Virtual QR: Escaneo desde la app madre para sellar cada compra; al llegar a 10 pedidos se desbloquea un llavero o mini-amigurumi conmemorativo.',
+          'Gumi-Tracker y Galería: Notificaciones en tiempo real del estado del tejido + subida de sesión de fotos previa al envío.',
+          'Centro de Liquidación: Datos bancarios con copiado rápido y envío de comprobante directo por el cliente.'
+        ],
+        blindSpots: [
+          '¿Cómo se validarán los pedidos hechos por Instagram o WhatsApp antes de que el cliente descargue la app?',
+          'Definir el costo máximo de producción del amigurumi de regalo en el sello #10 para proteger el margen de ganancia.'
+        ],
+        nextStep: 'Diseñar la pantalla de la tarjeta de 10 sellos con estética pastel y generador de código QR por cliente.',
+        rawText: 'Idea original: App personalizada gratuita para el negocio de mi pareja (Gumi Gumiland) de muñecos tejidos. Escaneo de código para sellar tarjeta virtual cada 10 pedidos y notificar avances con fotos y cuenta para liquidar.'
+      },
+      {
+        id: 'idea-apuestas',
+        title: 'Asistente Cuantitativo y Analítico de Apuestas (Draftea)',
+        folder: 'App Apuestas',
+        date: '21 Oct 2026',
+        core: 'Plataforma de apoyo matemático y visual que cruza el presupuesto del usuario con estadísticas deportivas reales (goles, tiros, rachas) para sugerir jugadas con mayor probabilidad.',
+        blocks: [
+          'Gestor de Bankroll: El usuario ingresa su presupuesto y la casa de apuestas (ej. Draftea) para recibir distribución inteligente del riesgo.',
+          'Dashboard Estadístico Visual: Gráficas de medias de goles, tiros a puerta e historial directo en lugar de solo texto.',
+          'Disclaimer Legal Fijo: Aviso transparente de que es una herramienta de probabilidad matemática y no garantiza victorias.'
+        ],
+        blindSpots: [
+          '¿Qué ligas o deportes serán prioritarios en la primera versión (Fútbol Liga MX/Champions, NFL o NBA)?',
+          'Elegir el proveedor de API deportiva gratuita o de bajo costo para alimentar las gráficas en automático.'
+        ],
+        nextStep: 'Conectar una API de estadísticas de fútbol y armar la calculadora de distribución de presupuesto (Stake).',
+        rawText: 'Idea original: Aplicación que genere opiniones matemáticas para apuestas como en Draftea según mi presupuesto, mostrando métricas, media de goles, tiros y gráficas visuales sin garantizar victoria.'
+      },
+      {
+        id: 'idea-lght',
+        title: 'Software Propietario de Cabina Fotográfica (B2B para LGHT)',
+        folder: 'Cabina LGHT',
+        date: '21 Oct 2026',
+        core: 'Sistema profesional de Photo Booth estilo LumaBooth/dslrBooth desarrollado a medida para vender o licenciar a LGHT, eliminando rentas de software extranjero.',
+        blocks: [
+          'Captura y Marcos Personalizados: Disparo con cámara profesional o iPad aplicando plantillas PNG del evento al instante.',
+          'Estación QR Instantánea: Generación de código QR en pantalla para que los invitados descarguen su foto o boomerang en el celular.',
+          'Modo Offline para Salones: Cola de guardado automático cuando no hay señal en el evento, enviando todo al recuperar conexión.'
+        ],
+        blindSpots: [
+          'Confirmar si las cabinas actuales de LGHT operan con iPad (iOS) o con Mini-PC (Windows) para elegir el lenguaje nativo.',
+          '¿Se ofrecerá al jefe como venta única del código fuente o como renta mensual por cabina activa?'
+        ],
+        nextStep: 'Armar una demo en video capturando una foto desde webcam/cámara con el logo de LGHT en el marco y generando un QR.',
+        rawText: 'Idea original: Crear una aplicación de cabina fotográfica como LumaBooth o dslrBooth para vendérsela a mi trabajo principal (LGHT) o darla como servicio a sus clientes.'
+      }
+    ];
+
+    let ideas = JSON.parse(localStorage.getItem('forja_ideas')) || INITIAL_IDEAS;
+    let activeFolder = 'TODAS';
+    let isRecording = false;
+    let recognition = null;
+
+    // Guardar estado inicial si estaba vacío
+    if (!localStorage.getItem('forja_ideas')) {
+      localStorage.setItem('forja_ideas', JSON.stringify(ideas));
+    }
+
+    // --- INICIALIZAR RECONOCIMIENTO DE VOZ (Web Speech API) ---
+    function initSpeech() {
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      if (!SpeechRecognition) return;
+
+      recognition = new SpeechRecognition();
+      recognition.lang = 'es-MX';
+      recognition.continuous = true;
+      recognition.interimResults = true;
+
+      let finalTranscript = '';
+
+      recognition.onstart = () => {
+        isRecording = true;
+        finalTranscript = document.getElementById('rawInput').value;
+        if (finalTranscript && !finalTranscript.endsWith(' ')) finalTranscript += ' ';
+        document.getElementById('anvilBtn').classList.add('recording', 'recording-glow');
+        document.getElementById('micStatusText').innerHTML = '🔴 ESCUCHANDO...';
+        document.getElementById('micStatusText').classList.replace('text-gray-400', 'text-magma');
+      };
+
+      recognition.onresult = (event) => {
+        let interim = '';
+        for (let i = event.resultIndex; i < event.results.length; ++i) {
+          if (event.results[i].isFinal) {
+            finalTranscript += event.results[i][0].transcript + '. ';
+          } else {
+            interim += event.results[i][0].transcript;
+          }
+        }
+        document.getElementById('rawInput').value = finalTranscript + interim;
+      };
+
+      recognition.onerror = () => stopRecordingUI();
+      recognition.onend = () => stopRecordingUI();
+    }
+
+    function toggleRecording() {
+      if (!recognition) {
+        initSpeech();
+        if (!recognition) {
+          alert('Tu navegador no soporta dictado directo. Usa Chrome, Edge o el micrófono del teclado de tu iPhone.');
+          return;
+        }
+      }
+      if (isRecording) {
+        recognition.stop();
+      } else {
+        recognition.start();
+      }
+    }
+
+    function stopRecordingUI() {
+      isRecording = false;
+      document.getElementById('anvilBtn').classList.remove('recording', 'recording-glow');
+      document.getElementById('micStatusText').innerHTML = '🎙️ DICTAR';
+      document.getElementById('micStatusText').classList.replace('text-magma', 'text-gray-400');
+    }
+
+    // --- MOTOR DEL MAESTRO DE TALLER (IA GEMINI + FALLBACK LOCAL) ---
+    async function forgeIdea() {
+  const rawText = document.getElementById('rawInput').value.trim();
+  if (!rawText) {
+    alert('Primero dicta por voz o escribe la materia prima de tu idea.');
+    return;
+  }
+
+  const weldTargetId = document.getElementById('weldSelect').value;
+  const chosenFolder = document.getElementById('folderSelect').value;
+  const apiKey = localStorage.getItem('forja_api_key') || '';
+
+  const loader = document.getElementById('forgingLoader');
+  loader.classList.remove('hidden');
+  document.getElementById('forgeBtn').disabled = true;
+
+  try {
+    let structuredPlano;
+    const existingIdea = weldTargetId !== 'NEW' ? ideas.find(i => i.id === weldTargetId) : null;
+
+    // Intentamos con la API si hay clave, si falla o no hay clave, usa el motor local inteligente
+    if (apiKey) {
+      try {
+        structuredPlano = await callGeminiMaestro(rawText, chosenFolder, existingIdea, apiKey);
+      } catch (apiErr) {
+        console.warn("Aviso de API, usando motor local de respaldo:", apiErr);
+        structuredPlano = localMaestroStructurer(rawText, chosenFolder, existingIdea);
+      }
+    } else {
+      structuredPlano = localMaestroStructurer(rawText, chosenFolder, existingIdea);
+    }
+
+    if (existingIdea) {
+      const idx = ideas.findIndex(i => i.id === weldTargetId);
+      ideas[idx] = {
+        ...existingIdea,
+        ...structuredPlano,
+        id: existingIdea.id,
+        date: 'Soldado: ' + new Date().toLocaleDateString('es-MX', { day: '2-digit', month: 'short', year: 'numeric' }),
+        rawText: existingIdea.rawText + '\n\n[+ Soldadura]: ' + rawText
+      };
+    } else {
+      ideas.unshift({
+        id: 'idea-' + Date.now(),
+        date: new Date().toLocaleDateString('es-MX', { day: '2-digit', month: 'short', year: 'numeric' }),
+        ...structuredPlano,
+        rawText
+      });
+    }
+
+    localStorage.setItem('forja_ideas', JSON.stringify(ideas));
+    document.getElementById('rawInput').value = '';
+    document.getElementById('weldSelect').value = 'NEW';
+    renderFolders();
+    renderIdeas();
+    updateWeldDropdown();
+  } catch (err) {
+    alert('Error al procesar la idea: ' + err.message);
+  } finally {
+    loader.classList.add('hidden');
+    document.getElementById('forgeBtn').disabled = false;
+  }
+}
+
+    async function callGeminiMaestro(rawText, chosenFolder, existingIdea, apiKey) {
+      const systemInstruction = `Eres el Maestro de Taller de FORJA, un Director de Operaciones y Arquitecto de Proyectos implacable, directo y práctico.
+Tu trabajo es recibir 'Materia Prima' (transcripciones de audio o notas rápidas) y transformarla en un 'Plano Estructurado' limpio en formato JSON estricto.
+${existingIdea ? `MODO SOLDADURA ACTIVO: El usuario quiere fusionar esta nueva nota con el proyecto existente llamado "${existingIdea.title}". Integra lo nuevo con lo que ya tenía: ${JSON.stringify(existingIdea)}` : ''}
+
+Devuelve ÚNICAMENTE un objeto JSON válido con estas claves exactas:
+{
+  "title": "Título corto y potente del proyecto o idea",
+  "folder": "${chosenFolder === 'AUTO' ? 'Elige una entre: Gumi Gumiland, App Apuestas, Cabina LGHT, Apps & Software, Taller & CNC, o Negocios' : chosenFolder}",
+  "core": "Resumen ejecutivo de 2 líneas explicando qué es y qué problema resuelve.",
+  "blocks": ["Punto clave 1", "Punto clave 2", "Punto clave 3"],
+  "blindSpots": ["Pregunta crítica o hueco técnico 1 que el usuario olvidó mencionar", "Pregunta crítica 2"],
+  "nextStep": "La primera acción física o técnica concreta para arrancar esto hoy."
+}`;
+
+      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents: [{ parts: [{ text: rawText }] }],
+          systemInstruction: { parts: [{ text: systemInstruction }] },
+          generationConfig: { responseMimeType: "application/json" }
+        })
+      });
+
+      if (!response.ok) throw new Error('Respuesta inválida de Gemini API');
+      const data = await response.json();
+      return JSON.parse(data.candidates[0].content.parts[0].text);
+    }
+
+    function localMaestroStructurer(rawText, chosenFolder, existingIdea) {
+      // Clasificador automático inteligente por palabras clave
+      let detectedFolder = chosenFolder;
+      if (chosenFolder === 'AUTO') {
+        const lower = rawText.toLowerCase();
+        if (lower.includes('gumi') || lower.includes('muñec') || lower.includes('tejid') || lower.includes('novia')) detectedFolder = 'Gumi Gumiland';
+        else if (lower.includes('apuest') || lower.includes('draftea') || lower.includes('gol') || lower.includes('momio')) detectedFolder = 'App Apuestas';
+        else if (lower.includes('cabina') || lower.includes('lght') || lower.includes('foto') || lower.includes('jefe')) detectedFolder = 'Cabina LGHT';
+        else if (lower.includes('cnc') || lower.includes('mdf') || lower.includes('escritorio') || lower.includes('3d')) detectedFolder = 'Taller & CNC';
+        else detectedFolder = 'Apps & Software';
+      }
+
+      const sentences = rawText.split(/[.!?]+/).map(s => s.trim()).filter(Boolean);
+
+      if (existingIdea) {
+        return {
+          title: existingIdea.title,
+          folder: existingIdea.folder,
+          core: existingIdea.core,
+          blocks: [...existingIdea.blocks, ...sentences],
+          blindSpots: existingIdea.blindSpots,
+          nextStep: existingIdea.nextStep
+        };
+      }
+
+      return {
+        title: sentences[0] ? sentences[0].slice(0, 52) + (sentences[0].length > 52 ? '...' : '') : 'Nuevo Plano Forjado',
+        folder: detectedFolder,
+        core: rawText.slice(0, 180) + (rawText.length > 180 ? '...' : ''),
+        blocks: sentences.length > 0 ? sentences : [rawText],
+        blindSpots: [
+          'Definir presupuesto o tiempo estimado de desarrollo para esta función.',
+          'Conecta tu Gemini API Key en el botón ⚙️ para que la IA analice puntos ciegos profundos automáticamente.'
+        ],
+        nextStep: 'Validar el flujo principal y armar el primer boceto funcional.'
+      };
+    }
+
+    // --- RENDERIZADO DE INTERFAZ ---
+    function renderFolders() {
+      const container = document.getElementById('foldersContainer');
+      const uniqueFolders = ['TODAS', ...new Set(ideas.map(i => i.folder))];
+
+      container.innerHTML = uniqueFolders.map(folder => {
+        const active = folder === activeFolder;
+        return `
+          <button 
+            onclick="setFolder('${folder}')"
+            class="px-3.5 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition border ${
+              active 
+                ? 'bg-magma text-white border-magma shadow-md' 
+                : 'bg-steel text-gray-400 border-steelLight hover:text-white'
+            }"
+          >
+            ${folder === 'TODAS' ? '🔥 Todos los Moldes' : '📁 ' + folder}
+          </button>
+        `;
+      }).join('');
+    }
+
+    function setFolder(folder) {
+      activeFolder = folder;
+      renderFolders();
+      renderIdeas();
+    }
+
+    function updateWeldDropdown() {
+      const select = document.getElementById('weldSelect');
+      select.innerHTML = `<option value="NEW">🆕 Crear Plano Nuevo</option>` +
+        ideas.map(i => `<option value="${i.id}">🔗 Soldar a: ${i.title.slice(0, 32)}...</option>`).join('');
+    }
+
+    function renderIdeas() {
+      const query = document.getElementById('searchInput').value.toLowerCase();
+      const grid = document.getElementById('ideasGrid');
+
+      const filtered = ideas.filter(idea => {
+        const matchesFolder = activeFolder === 'TODAS' || idea.folder === activeFolder;
+        const matchesQuery = idea.title.toLowerCase().includes(query) ||
+                             idea.core.toLowerCase().includes(query) ||
+                             idea.rawText.toLowerCase().includes(query) ||
+                             idea.blocks.some(b => b.toLowerCase().includes(query));
+        return matchesFolder && matchesQuery;
+      });
+
+      document.getElementById('ideasCount').innerText = filtered.length;
+
+      if (filtered.length === 0) {
+        grid.innerHTML = `
+          <div class="bg-steel/50 border border-steelLight rounded-2xl p-8 text-center text-gray-400 text-sm">
+            No hay planos en este molde todavía. Toca el Yunque Sonoro arriba para forjar uno nuevo.
+          </div>`;
+        return;
+      }
+
+      grid.innerHTML = filtered.map(idea => `
+        <article class="bg-steel border border-steelLight rounded-2xl p-5 shadow-lg hover:border-gray-600 transition">
+          <div class="flex flex-wrap items-start justify-between gap-2 mb-3">
+            <div>
+              <span class="inline-block text-[11px] mono font-bold uppercase px-2.5 py-0.5 rounded-md bg-magma/15 text-magma border border-magma/30 mb-1.5">
+                📁 ${idea.folder}
+              </span>
+              <h4 class="text-base sm:text-lg font-extrabold text-white">${idea.title}</h4>
+            </div>
+            <div class="flex items-center gap-2">
+              <span class="text-xs mono text-gray-400">📅 ${idea.date}</span>
+              <button onclick="deleteIdea('${idea.id}')" title="Eliminar Plano" class="text-gray-500 hover:text-red-400 text-xs px-1.5">🗑️</button>
+            </div>
+          </div>
+
+          <!-- El Núcleo -->
+          <div class="bg-carbon/80 border-l-4 border-magma rounded-r-xl p-3 mb-4">
+            <p class="text-xs font-bold uppercase text-magma mono mb-1">⚡ El Núcleo</p>
+            <p class="text-sm text-gray-200 leading-relaxed">${idea.core}</p>
+          </div>
+
+          <!-- Bloques de Construcción y Puntos Ciegos -->
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+            <div class="bg-carbon/50 border border-steelLight rounded-xl p-3.5">
+              <p class="text-xs font-bold uppercase text-gray-300 mono mb-2">🧱 Bloques de Construcción</p>
+              <ul class="space-y-1.5 text-xs text-gray-300 list-disc pl-4">
+                ${idea.blocks.map(b => `<li>${b}</li>`).join('')}
+              </ul>
+            </div>
+
+            <div class="bg-carbon/50 border border-steelLight rounded-xl p-3.5">
+              <p class="text-xs font-bold uppercase text-gold mono mb-2">❓ Puntos Ciegos Detectados</p>
+              <ul class="space-y-1.5 text-xs text-gray-300 list-disc pl-4">
+                ${idea.blindSpots.map(b => `<li>${b}</li>`).join('')}
+              </ul>
+            </div>
+          </div>
+
+          <!-- Primer Golpe de Martillo -->
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 bg-magma/10 border border-magma/30 rounded-xl px-3.5 py-2.5">
+            <p class="text-xs text-gray-200">
+              <strong class="text-gold mono uppercase">🔨 Primer Golpe:</strong> ${idea.nextStep}
+            </p>
+            <details class="text-xs text-gray-400 cursor-pointer shrink-0">
+              <summary class="hover:text-white mono">🎙️ Ver Materia Prima</summary>
+              <p class="mt-2 p-2 bg-carbon rounded text-gray-400 italic max-w-md">${idea.rawText}</p>
+            </details>
+          </div>
+        </article>
+      `).join('');
+    }
+
+    // --- UTILIDADES ---
+    function deleteIdea(id) {
+      if (!confirm('¿Seguro que deseas fundir (eliminar) este plano de la bóveda?')) return;
+      ideas = ideas.filter(i => i.id !== id);
+      localStorage.setItem('forja_ideas', JSON.stringify(ideas));
+      renderFolders();
+      renderIdeas();
+      updateWeldDropdown();
+    }
+
+    function toggleModal(id) {
+      const el = document.getElementById(id);
+      el.classList.toggle('hidden');
+      if (id === 'settingsModal' && !el.classList.contains('hidden')) {
+        document.getElementById('apiKeyInput').value = localStorage.getItem('forja_api_key') || '';
+      }
+    }
+
+    function saveApiKey() {
+      const key = document.getElementById('apiKeyInput').value.trim();
+      localStorage.setItem('forja_api_key', key);
+      toggleModal('settingsModal');
+      alert(key ? '🔥 Motor IA conectado con éxito.' : 'Modo local activado.');
+    }
+
+    function exportBackup() {
+      const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(ideas, null, 2));
+      const a = document.createElement('a');
+      a.setAttribute("href", dataStr);
+      a.setAttribute("download", `FORJA_Backup_${new Date().toISOString().slice(0,10)}.json`);
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+    }
+
+    // Inicializar al abrir
+    initSpeech();
+    renderFolders();
+    renderIdeas();
+    updateWeldDropdown();
+  </script>
+</body>
+</html>
