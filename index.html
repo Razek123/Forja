@@ -1,0 +1,1096 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="theme-color" content="#FFFBF5" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <meta name="apple-mobile-web-app-title" content="Gumi Club" />
+  <title>Gumi Club — Gumi Gumiland (@gumigumiland_n.n)</title>
+
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Librería de Escáner QR por Cámara Real -->
+  <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            vanilla: '#FFFBF5',
+            peachCream: '#FFF0F3',
+            teddyLight: '#E6B88A',
+            teddy: '#C68B59',
+            teddyDark: '#9C6638',
+            blushPink: '#FF7597',
+            blushDark: '#E6557A',
+            mintPastel: '#48B8A8',
+            lilacPastel: '#B39CD0',
+            espresso: '#3E2723',
+            mocha: '#795548'
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Quicksand:wght@500;600;700;800&display=swap');
+
+    body {
+      font-family: 'Quicksand', sans-serif;
+      background-color: #FFFBF5;
+      color: #3E2723;
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
+    }
+
+    .gumi-shadow {
+      box-shadow: 0 12px 28px -6px rgba(198, 139, 89, 0.16), 0 4px 12px -2px rgba(255, 117, 151, 0.08);
+    }
+
+    .stitch-border {
+      background-image: repeating-linear-gradient(45deg, transparent, transparent 6px, rgba(198,139,89,0.12) 6px, rgba(198,139,89,0.12) 12px);
+    }
+
+    @keyframes floatBear {
+      0%, 100% { transform: translateY(0px); }
+      50% { transform: translateY(-5px); }
+    }
+    .float-anim { animation: floatBear 3s ease-in-out infinite; }
+
+    @keyframes popIn {
+      0% { transform: scale(0.85); opacity: 0; }
+      70% { transform: scale(1.05); }
+      100% { transform: scale(1); opacity: 1; }
+    }
+    .pop-in { animation: popIn 0.35s ease-out forwards; }
+
+    .no-scrollbar::-webkit-scrollbar { display: none; }
+    .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+  </style>
+</head>
+
+<body class="min-h-screen flex flex-col justify-between">
+
+  <!-- NOTIFICACIÓN PUSH EN TIEMPO REAL -->
+  <div id="pushToast" class="hidden fixed top-4 inset-x-4 z-50 max-w-md mx-auto bg-white border-2 border-blushPink rounded-3xl p-3.5 gumi-shadow flex items-center gap-3 pop-in">
+    <div class="w-11 h-11 rounded-2xl bg-peachCream flex items-center justify-center text-2xl shrink-0">🧸</div>
+    <div class="flex-1 text-xs">
+      <p class="font-extrabold text-blushPink uppercase tracking-wider">Gumi Gumiland • En Vivo</p>
+      <p id="pushToastText" class="font-bold text-espresso mt-0.5">¡Tu tarjeta o pedido se ha actualizado!</p>
+    </div>
+    <button onclick="hideToast()" class="text-mocha font-extrabold px-2">✕</button>
+  </div>
+
+  <!-- =================================================================== -->
+  <!-- PANTALLA 1: BIENVENIDA E INICIO DE SESIÓN (CLIENTE / EMPRENDEDORA)  -->
+  <!-- =================================================================== -->
+  <section id="authScreen" class="min-h-screen flex flex-col justify-center items-center px-5 py-8 max-w-md mx-auto w-full">
+    
+    <!-- Tarjeta de Bienvenida con el Osito Tejido -->
+    <div class="bg-white rounded-[32px] p-6 w-full border border-orange-100 gumi-shadow text-center relative overflow-hidden">
+      
+      <!-- Decoración Superior -->
+      <div class="absolute -top-12 -right-12 w-32 h-32 bg-peachCream rounded-full opacity-60"></div>
+      <div class="absolute -top-8 -left-10 w-24 h-24 bg-orange-50 rounded-full opacity-80"></div>
+
+      <!-- LOGO / MASCOTA: OSITO TEJIDO DE GUMI GUMILAND -->
+      <div class="relative z-10 mx-auto w-28 h-28 rounded-full bg-gradient-to-b from-peachCream to-orange-50 border-4 border-white gumi-shadow flex items-center justify-center mb-3 float-anim overflow-hidden">
+        <img id="customBrandLogoAuth" class="hidden w-full h-full object-cover" alt="Logo Gumi Gumiland" />
+        <div id="defaultBearLogoAuth" class="w-24 h-24">
+          <!-- Vector Oficial del Osito Tejido Gumi Gumiland -->
+          <svg viewBox="0 0 120 120" class="w-full h-full">
+            <!-- Orejitas Tejidas -->
+            <circle cx="28" cy="30" r="16" fill="#C68B59" stroke="#9C6638" stroke-width="2.5"/>
+            <circle cx="28" cy="30" r="8" fill="#FFB5C2"/>
+            <circle cx="92" cy="30" r="16" fill="#C68B59" stroke="#9C6638" stroke-width="2.5"/>
+            <circle cx="92" cy="30" r="8" fill="#FFB5C2"/>
+            <!-- Cabeza del Osito -->
+            <ellipse cx="60" cy="62" rx="38" ry="35" fill="#C68B59" stroke="#9C6638" stroke-width="2.5"/>
+            <!-- Textura de puntos de crochet en la frente -->
+            <path d="M 45 36 Q 50 33 55 36 M 60 35 Q 65 32 70 35 M 52 42 Q 57 39 62 42" stroke="#9C6638" stroke-width="1.8" fill="none" stroke-linecap="round"/>
+            <!-- Trompita Crema -->
+            <ellipse cx="60" cy="68" rx="15" ry="12" fill="#FFFBF5"/>
+            <!-- Nariz y Boquita Kawaii -->
+            <ellipse cx="60" cy="64" rx="5.5" ry="4" fill="#3E2723"/>
+            <path d="M 60 68 L 60 72 M 54 73 Q 60 77 66 73" stroke="#3E2723" stroke-width="2.2" fill="none" stroke-linecap="round"/>
+            <!-- Ojitos de seguridad brillantes -->
+            <circle cx="43" cy="56" r="4.5" fill="#3E2723"/>
+            <circle cx="41.5" cy="54.5" r="1.5" fill="#FFFFFF"/>
+            <circle cx="77" cy="56" r="4.5" fill="#3E2723"/>
+            <circle cx="75.5" cy="54.5" r="1.5" fill="#FFFFFF"/>
+            <!-- Mejillas Sonrojadas -->
+            <ellipse cx="34" cy="65" rx="6" ry="3.5" fill="#FF7597" opacity="0.65"/>
+            <ellipse cx="86" cy="65" rx="6" ry="3.5" fill="#FF7597" opacity="0.65"/>
+            <!-- Corazón de Estambre en el pecho -->
+            <path d="M 60 106 C 60 106 44 96 44 87 C 44 82 49 79 54 79 C 57 79 59 81 60 83 C 61 81 63 79 66 79 C 71 79 76 82 76 87 C 76 96 60 106 60 106 Z" fill="#FF7597" stroke="#E6557A" stroke-width="1.5"/>
+          </svg>
+        </div>
+      </div>
+
+      <span class="inline-block text-[10px] font-extrabold uppercase tracking-widest px-3 py-1 rounded-full bg-peachCream text-blushPink mb-1">
+        Bienvenida Oficial
+      </span>
+      <h1 class="text-2xl font-extrabold text-espresso">Gumi Club</h1>
+      <p class="text-xs font-semibold text-mocha mb-4">
+        El club de recompensas y pedidos de <a href="https://www.instagram.com/gumigumiland_n.n/" target="_blank" class="text-blushPink underline font-extrabold">@gumigumiland_n.n</a> 🧸🧶
+      </p>
+
+      <!-- Pestañas: Soy Cliente / Soy Emprendedora -->
+      <div class="grid grid-cols-2 gap-1.5 bg-vanilla p-1.5 rounded-2xl border border-orange-100 mb-5">
+        <button id="tabClientAuthBtn" onclick="switchAuthTab('CLIENT')" class="py-2 rounded-xl text-xs font-extrabold bg-blushPink text-white shadow-sm transition">
+          🧸 Soy Cliente
+        </button>
+        <button id="tabAdminAuthBtn" onclick="switchAuthTab('ADMIN')" class="py-2 rounded-xl text-xs font-extrabold text-mocha hover:text-espresso transition">
+          👑 App Madre
+        </button>
+      </div>
+
+      <!-- FORMULARIO CLIENTE (CREAR O ENTRAR A SU TARJETA) -->
+      <div id="clientAuthForm" class="space-y-3 text-left">
+        <div>
+          <label class="text-[11px] font-extrabold text-mocha uppercase">Tu Nombre o Apodo:</label>
+          <input id="loginClientName" type="text" placeholder="Ej. Sofía Hernández" class="w-full mt-1 bg-vanilla border border-orange-200 rounded-2xl px-4 py-3 text-sm font-bold text-espresso focus:outline-none focus:border-blushPink" />
+        </div>
+        <div>
+          <label class="text-[11px] font-extrabold text-mocha uppercase">Tu WhatsApp (10 dígitos - Será tu ID único):</label>
+          <input id="loginClientPhone" type="tel" maxlength="10" placeholder="Ej. 5512345678" class="w-full mt-1 bg-vanilla border border-orange-200 rounded-2xl px-4 py-3 text-sm font-bold text-espresso font-mono focus:outline-none focus:border-blushPink" />
+        </div>
+        <button onclick="loginOrRegisterClient()" class="w-full py-3.5 rounded-2xl bg-gradient-to-r from-blushPink to-pink-400 text-white font-extrabold text-xs uppercase tracking-wider gumi-shadow hover:opacity-95 transition mt-2">
+          ✨ Entrar a mi Tarjeta Gumi Club
+        </button>
+        <p class="text-[11px] text-center text-mocha pt-1">
+          🎁 ¡Recibe tu <strong>Sello #1 de regalo</strong> al crear tu cuenta por primera vez!
+        </p>
+      </div>
+
+      <!-- FORMULARIO EXCLUSIVO EMPRENDEDORA (APP MADRE) -->
+      <div id="adminAuthForm" class="hidden space-y-3 text-left">
+        <div class="bg-orange-50 border border-orange-200 rounded-2xl p-3 text-xs text-mocha mb-2">
+          🔒 <strong>Acceso exclusivo para la creadora de Gumi Gumiland.</strong> Desde aquí escaneas códigos QR, sellas tarjetas y subes fotos de pedidos.
+        </div>
+        <div>
+          <label class="text-[11px] font-extrabold text-mocha uppercase">Correo de Emprendedora:</label>
+          <input id="loginAdminEmail" type="email" value="admin@gumigumiland.com" class="w-full mt-1 bg-vanilla border border-orange-200 rounded-2xl px-4 py-2.5 text-sm font-bold text-espresso focus:outline-none focus:border-teddy" />
+        </div>
+        <div>
+          <label class="text-[11px] font-extrabold text-mocha uppercase">Contraseña Maestra:</label>
+          <input id="loginAdminPass" type="password" placeholder="••••••••" class="w-full mt-1 bg-vanilla border border-orange-200 rounded-2xl px-4 py-2.5 text-sm font-bold text-espresso focus:outline-none focus:border-teddy" />
+          <p class="text-[10px] text-mocha mt-1">Contraseña inicial por defecto: <code class="font-bold text-espresso">gumi2026</code></p>
+        </div>
+        <button onclick="loginAdmin()" class="w-full py-3.5 rounded-2xl bg-teddy hover:bg-teddyDark text-white font-extrabold text-xs uppercase tracking-wider gumi-shadow transition">
+          👑 Iniciar Sesión en App Madre
+        </button>
+      </div>
+
+    </div>
+
+    <!-- Botón de Instalación PWA y Enlace a Instagram -->
+    <div class="mt-5 flex flex-wrap items-center justify-center gap-3">
+      <a href="https://www.instagram.com/gumigumiland_n.n/" target="_blank" class="px-4 py-2 rounded-full bg-white border border-pink-200 text-xs font-extrabold text-blushPink gumi-shadow flex items-center gap-1.5">
+        <span>📸 Ver Instagram @gumigumiland_n.n</span>
+      </a>
+      <button onclick="showInstallHelp()" class="px-4 py-2 rounded-full bg-white border border-orange-200 text-xs font-extrabold text-teddy gumi-shadow">
+        📲 Instalar en mi Celular
+      </button>
+    </div>
+  </section>
+
+
+  <!-- =================================================================== -->
+  <!-- PANTALLA 2: APLICACIÓN DEL CLIENTE (CON NAVEGACIÓN INFERIOR NATIVA) -->
+  <!-- =================================================================== -->
+  <div id="clientAppWrapper" class="hidden flex-1 flex flex-col pb-24">
+    
+    <!-- Header Cliente -->
+    <header class="sticky top-0 z-30 bg-vanilla/95 backdrop-blur-md border-b border-orange-100 px-4 py-3">
+      <div class="max-w-md mx-auto flex items-center justify-between">
+        <div class="flex items-center gap-2.5">
+          <div class="w-10 h-10 rounded-2xl bg-peachCream border border-pink-200 flex items-center justify-center overflow-hidden">
+            <img id="customBrandLogoHeader" class="hidden w-full h-full object-cover" />
+            <span id="defaultBearHeader" class="text-xl">🧸</span>
+          </div>
+          <div>
+            <h2 class="font-extrabold text-base text-espresso leading-tight">Gumi Club</h2>
+            <p id="headerClientName" class="text-xs font-bold text-blushPink">Hola, Socia 🌸</p>
+          </div>
+        </div>
+
+        <div class="flex items-center gap-2">
+          <a href="https://www.instagram.com/gumigumiland_n.n/" target="_blank" class="px-2.5 py-1.5 rounded-xl bg-peachCream text-blushPink text-xs font-extrabold">
+            📸 IG
+          </a>
+          <button onclick="logout()" class="px-2.5 py-1.5 rounded-xl bg-orange-50 text-mocha text-xs font-bold border border-orange-200">
+            Salir
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <!-- Contenedor de Vistas del Cliente -->
+    <main class="max-w-md w-full mx-auto px-4 pt-4 space-y-5 flex-1">
+
+      <!-- PESTAÑA 1: TARJETA DE LEALTAD Y QR ÚNICO -->
+      <div id="clientTab-card" class="space-y-4">
+        <!-- Banner del Osito Tejido -->
+        <div class="bg-gradient-to-r from-teddy to-teddyLight rounded-3xl p-5 text-white gumi-shadow relative overflow-hidden">
+          <div class="relative z-10 pr-16">
+            <span class="text-[10px] font-extrabold uppercase tracking-wider bg-white/25 px-2.5 py-0.5 rounded-full">
+              Tarjeta Oficial Gumi Gumiland
+            </span>
+            <h3 id="cardBannerName" class="text-xl font-extrabold mt-1">Sofía Hernández</h3>
+            <p class="text-xs opacity-95 mt-0.5">ID Único: <span id="cardBannerId" class="font-mono font-bold underline">GUMI-5678</span></p>
+          </div>
+          <div class="absolute right-3 bottom-1 text-6xl select-none float-anim">🧸</div>
+        </div>
+
+        <!-- Tarjeta de 10 Sellos de Osito -->
+        <div class="bg-white rounded-3xl p-5 border border-orange-100 gumi-shadow">
+          <div class="flex items-center justify-between mb-2">
+            <div>
+              <h4 class="font-extrabold text-base text-espresso">🧶 Mis Sellos Acumulados</h4>
+              <p class="text-xs text-mocha font-semibold">Cada 10 pedidos recibe un Mini-Gumi o Llavero Gratis</p>
+            </div>
+            <span id="clientStampCount" class="bg-peachCream text-blushPink font-extrabold text-sm px-3 py-1 rounded-2xl border border-pink-200">
+              1 / 10
+            </span>
+          </div>
+
+          <!-- Grid de 10 Casillas -->
+          <div id="clientStampsGrid" class="grid grid-cols-5 gap-2.5 my-4"></div>
+
+          <!-- Cupón de Regalo al llegar a 10 -->
+          <div id="clientRewardBox" class="hidden bg-gradient-to-r from-pink-100 to-amber-100 border-2 border-blushPink rounded-2xl p-4 text-center mb-3 pop-in">
+            <p class="text-sm font-extrabold text-espresso">🎁 ¡FELICIDADES! TIENES UN REGALO 🎁</p>
+            <p class="text-xs text-mocha font-bold mt-1">Completaste tus 10 sellos. Muestra tu código QR a Gumi Gumiland para reclamar tu Mini-Amigurumi o Llavero Conmemorativo.</p>
+          </div>
+
+          <!-- Botón para abrir QR Único -->
+          <button onclick="openClientQRModal()" class="w-full py-3.5 rounded-2xl bg-blushPink hover:bg-blushDark text-white font-extrabold text-xs uppercase tracking-wider gumi-shadow transition flex items-center justify-center gap-2">
+            <span>📲 Mostrar mi Código QR para Sellar</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- PESTAÑA 2: RASTREADOR DE PEDIDO Y GALERÍA DE FOTOS -->
+      <div id="clientTab-order" class="hidden space-y-4">
+        <div class="bg-white rounded-3xl p-5 border border-orange-100 gumi-shadow">
+          <div class="flex items-center justify-between mb-3">
+            <div>
+              <span class="text-[10px] font-extrabold uppercase px-2.5 py-0.5 rounded-full bg-teal-50 text-mintPastel border border-teal-200">
+                Estado en Tiempo Real
+              </span>
+              <h3 id="clientOrderTitle" class="font-extrabold text-base text-espresso mt-1">Osito Amigurumi Personalizado</h3>
+            </div>
+            <span id="clientOrderDate" class="text-xs font-extrabold text-teddy bg-orange-50 px-3 py-1.5 rounded-xl border border-orange-200">
+              Por confirmar
+            </span>
+          </div>
+
+          <!-- Línea de Tiempo del Tejido -->
+          <div id="clientTrackerSteps" class="my-5 space-y-3"></div>
+
+          <!-- Sesión de Fotos del Pedido -->
+          <div class="pt-4 border-t border-orange-100">
+            <div class="flex items-center justify-between mb-2.5">
+              <h4 class="font-extrabold text-xs uppercase tracking-wider text-blushPink">
+                📸 Sesión de Fotos de tu Pedido
+              </h4>
+              <span class="text-[11px] text-mocha font-semibold">Toca para ampliar</span>
+            </div>
+            <div id="clientPhotosContainer" class="flex gap-3 overflow-x-auto no-scrollbar pb-2"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- PESTAÑA 3: CENTRO DE LIQUIDACIÓN Y MENSAJE DIRECTO -->
+      <div id="clientTab-pay" class="hidden space-y-4">
+        <div class="bg-white rounded-3xl p-5 border border-orange-100 gumi-shadow">
+          <h3 class="font-extrabold text-base text-espresso">💳 Liquidación de tu Pedido</h3>
+          <p class="text-xs text-mocha mb-4">Revisa tu saldo pendiente y transfiere con un toque.</p>
+
+          <div class="grid grid-cols-3 gap-2 bg-vanilla p-3.5 rounded-2xl border border-orange-100 text-center mb-4">
+            <div>
+              <p class="text-[10px] text-mocha font-bold uppercase">Total</p>
+              <p id="clientTotalPay" class="font-extrabold text-sm text-espresso">$0</p>
+            </div>
+            <div class="border-x border-orange-100">
+              <p class="text-[10px] text-mocha font-bold uppercase">Anticipo</p>
+              <p id="clientAdvancePay" class="font-extrabold text-sm text-mintPastel">$0</p>
+            </div>
+            <div>
+              <p class="text-[10px] text-blushPink font-bold uppercase">Restante</p>
+              <p id="clientPendingPay" class="font-extrabold text-sm text-blushPink">$0</p>
+            </div>
+          </div>
+
+          <!-- Tarjeta Bancaria Oficial -->
+          <div class="bg-gradient-to-br from-espresso to-teddyDark text-white rounded-2xl p-4 mb-4 gumi-shadow">
+            <div class="flex justify-between items-center text-xs opacity-85 mb-2">
+              <span id="clientBankName" class="font-extrabold">Transferencia Bancaria</span>
+              <span>Gumi Gumiland</span>
+            </div>
+            <p id="clientClabeNumber" class="font-mono font-extrabold text-sm tracking-wider mb-3">012 180 01548963214 7</p>
+            <div class="flex items-center justify-between">
+              <span class="text-[11px] opacity-85">Copia la cuenta para liquidar</span>
+              <button onclick="copyBankClabe()" class="bg-white/20 hover:bg-white/30 text-white text-xs font-extrabold px-3 py-1.5 rounded-xl transition">
+                📋 Copiar CLABE
+              </button>
+            </div>
+          </div>
+
+          <button onclick="openWhatsAppDirect()" class="w-full py-3.5 rounded-2xl bg-blushPink hover:bg-blushDark text-white font-extrabold text-xs uppercase tracking-wider gumi-shadow transition flex items-center justify-center gap-2">
+            <span>💬 Enviar Comprobante o Mensaje por WhatsApp</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- PESTAÑA 4: CERTIFICADOS Y COMUNIDAD GUMI GUMILAND -->
+      <div id="clientTab-club" class="hidden space-y-4">
+        <div class="bg-white rounded-3xl p-5 border border-orange-100 gumi-shadow text-center">
+          <div class="w-16 h-16 rounded-full bg-peachCream mx-auto flex items-center justify-center text-3xl mb-2">🧸</div>
+          <span class="text-[10px] font-extrabold uppercase px-3 py-0.5 rounded-full bg-orange-50 text-teddy border border-orange-200">
+            Certificado Oficial de Adopción
+          </span>
+          <h4 class="font-extrabold text-base text-espresso mt-2" id="certGumiName">Mi Amigurumi Gumi Gumiland</h4>
+          <p class="text-xs text-mocha mt-1">Tejido 100% a mano con amor y estambre suave para <strong id="certOwnerName">Sofía</strong>.</p>
+          
+          <div class="mt-4 bg-vanilla rounded-2xl p-3.5 text-left text-xs space-y-1.5 border border-orange-100">
+            <p class="font-extrabold text-teddy uppercase text-[11px]">🧼 Cuidados de tu Osito / Amigurumi:</p>
+            <p class="text-mocha">• Lavar a mano con agua fría y jabón neutro líquido.</p>
+            <p class="text-mocha">• No exprimir ni meter a secadora; secar a la sombra sobre una toalla.</p>
+            <p class="text-mocha">• ¡Darle muchos abrazos todos los días!</p>
+          </div>
+
+          <a href="https://www.instagram.com/gumigumiland_n.n/" target="_blank" class="mt-4 w-full py-3 rounded-2xl bg-gradient-to-r from-purple-500 via-pink-500 to-orange-400 text-white font-extrabold text-xs uppercase tracking-wider inline-flex items-center justify-center gap-2 gumi-shadow">
+            <span>📸 Etiquétanos en Instagram @gumigumiland_n.n</span>
+          </a>
+        </div>
+      </div>
+
+    </main>
+
+    <!-- BARRA DE NAVEGACIÓN INFERIOR NATIVA DEL CLIENTE -->
+    <nav class="fixed bottom-0 inset-x-0 z-30 bg-white/95 backdrop-blur-md border-t border-orange-100 px-3 py-2">
+      <div class="max-w-md mx-auto grid grid-cols-4 gap-1">
+        <button onclick="switchClientTab('card')" id="navBtn-card" class="flex flex-col items-center py-1.5 rounded-2xl text-blushPink bg-peachCream font-extrabold text-[11px]">
+          <span class="text-lg">🧶</span>
+          <span>Mi Tarjeta</span>
+        </button>
+        <button onclick="switchClientTab('order')" id="navBtn-order" class="flex flex-col items-center py-1.5 rounded-2xl text-mocha font-bold text-[11px]">
+          <span class="text-lg">📦</span>
+          <span>Mi Pedido</span>
+        </button>
+        <button onclick="switchClientTab('pay')" id="navBtn-pay" class="flex flex-col items-center py-1.5 rounded-2xl text-mocha font-bold text-[11px]">
+          <span class="text-lg">💳</span>
+          <span>Liquidar</span>
+        </button>
+        <button onclick="switchClientTab('club')" id="navBtn-club" class="flex flex-col items-center py-1.5 rounded-2xl text-mocha font-bold text-[11px]">
+          <span class="text-lg">🧸</span>
+          <span>Cuidados</span>
+        </button>
+      </div>
+    </nav>
+  </div>
+
+
+  <!-- =================================================================== -->
+  <!-- PANTALLA 3: "APP MADRE" — PANEL EXCLUSIVO DE EMPRENDEDORA           -->
+  <!-- =================================================================== -->
+  <div id="adminAppWrapper" class="hidden flex-1 flex flex-col pb-16">
+    
+    <header class="sticky top-0 z-30 bg-espresso text-white px-4 py-3.5 shadow-md">
+      <div class="max-w-xl mx-auto flex items-center justify-between">
+        <div class="flex items-center gap-2.5">
+          <span class="text-2xl">👑</span>
+          <div>
+            <h2 class="font-extrabold text-base leading-tight">App Madre — Gumi Gumiland</h2>
+            <p class="text-[11px] text-teddyLight font-semibold">Control de Clientes, Escáner QR y Pedidos en Vivo</p>
+          </div>
+        </div>
+        <button onclick="logout()" class="px-3 py-1.5 rounded-xl bg-white/15 hover:bg-white/25 text-xs font-extrabold">
+          Cerrar Sesión
+        </button>
+      </div>
+    </header>
+
+    <main class="max-w-xl w-full mx-auto px-4 pt-5 space-y-5">
+
+      <!-- MÓDULO 1: ESCÁNER DE CÁMARA REAL Y SELECTOR DE CLIENTES -->
+      <section class="bg-white rounded-3xl p-5 border border-orange-200 gumi-shadow space-y-4">
+        <div class="flex items-center justify-between">
+          <div>
+            <h3 class="font-extrabold text-sm text-espresso uppercase tracking-wider">📲 1. Escanear o Seleccionar Cliente</h3>
+            <p class="text-xs text-mocha">Escanea el código QR del cliente con tu cámara o elígelo de la lista.</p>
+          </div>
+          <button onclick="toggleCameraScanner()" class="px-3.5 py-2 rounded-2xl bg-blushPink text-white font-extrabold text-xs gumi-shadow flex items-center gap-1.5">
+            <span>📷 Escanear QR</span>
+          </button>
+        </div>
+
+        <!-- Contenedor del Lector de Cámara en Vivo -->
+        <div id="qrReaderBox" class="hidden bg-vanilla p-3 rounded-2xl border-2 border-blushPink">
+          <div id="qr-reader" class="w-full rounded-xl overflow-hidden"></div>
+          <button onclick="stopCameraScanner()" class="mt-2 w-full py-2 rounded-xl bg-espresso text-white text-xs font-bold">
+            Cerrar Cámara
+          </button>
+        </div>
+
+        <!-- Selector de Cliente Registrado -->
+        <div>
+          <label class="text-xs font-extrabold text-mocha">Cliente seleccionado actualmente:</label>
+          <select id="adminClientSelector" onchange="selectAdminClient(this.value)" class="w-full mt-1 bg-vanilla border-2 border-teddyLight rounded-2xl px-3.5 py-2.5 text-sm font-extrabold text-espresso focus:outline-none focus:border-teddy"></select>
+        </div>
+
+        <!-- Botones Rápidos de Sellado -->
+        <div class="bg-peachCream/70 p-4 rounded-2xl border border-pink-200 flex flex-col sm:flex-row items-center justify-between gap-3">
+          <div>
+            <p class="text-xs font-extrabold text-espresso">Sellos actuales: <span id="adminSelectedStamps" class="text-blushPink text-base">0 / 10</span></p>
+            <p class="text-[11px] text-mocha">ID QR: <span id="adminSelectedQrId" class="font-mono font-bold">GUMI-0000</span></p>
+          </div>
+          <div class="flex gap-2 w-full sm:w-auto">
+            <button onclick="adminAddStampToSelected()" class="flex-1 sm:flex-initial px-4 py-2.5 rounded-xl bg-blushPink hover:bg-blushDark text-white font-extrabold text-xs shadow">
+              ➕ Sellar (+1)
+            </button>
+            <button onclick="adminResetSelectedStamps()" class="px-3 py-2.5 rounded-xl bg-white text-mocha border border-pink-200 font-bold text-xs">
+              🔄 Canjear / 0
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <!-- MÓDULO 2: GESTIÓN DEL PEDIDO, FOTOS Y NOTIFICACIONES -->
+      <section class="bg-white rounded-3xl p-5 border border-orange-200 gumi-shadow space-y-3.5">
+        <h3 class="font-extrabold text-sm text-espresso uppercase tracking-wider">🧶 2. Pedido y Sesión de Fotos del Cliente</h3>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label class="text-xs font-bold text-mocha">Amigurumi encargado:</label>
+            <input id="adminOrderTitleInput" type="text" class="w-full mt-1 bg-vanilla border border-orange-200 rounded-xl px-3 py-2 text-sm font-bold text-espresso" />
+          </div>
+          <div>
+            <label class="text-xs font-bold text-mocha">Fecha de entrega:</label>
+            <input id="adminOrderDateInput" type="text" placeholder="Ej. Viernes 24 Oct" class="w-full mt-1 bg-vanilla border border-orange-200 rounded-xl px-3 py-2 text-sm font-bold text-espresso" />
+          </div>
+        </div>
+
+        <div>
+          <label class="text-xs font-bold text-mocha">Etapa del pedido (Actualiza en vivo al cliente):</label>
+          <select id="adminOrderStepInput" class="w-full mt-1 bg-peachCream border border-pink-300 rounded-xl px-3 py-2.5 text-sm font-extrabold text-blushPink">
+            <option value="0">1️⃣ Pedido confirmado (En fila de espera)</option>
+            <option value="1">2️⃣ Tejiendo el cuerpo de tu Gumi 🧶</option>
+            <option value="2">3️⃣ Bordando detalles y carita ✨</option>
+            <option value="3">4️⃣ ¡Sesión de fotos lista! Mira tu galería 📸</option>
+            <option value="4">5️⃣ ¡Tu Gumi está listo para entrega! 🎁</option>
+          </select>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="text-xs font-bold text-mocha">Total del Pedido ($):</label>
+            <input id="adminTotalInput" type="number" class="w-full mt-1 bg-vanilla border border-orange-200 rounded-xl px-3 py-2 text-sm font-bold" />
+          </div>
+          <div>
+            <label class="text-xs font-bold text-mocha">Anticipo Recibido ($):</label>
+            <input id="adminAdvanceInput" type="number" class="w-full mt-1 bg-vanilla border border-orange-200 rounded-xl px-3 py-2 text-sm font-bold" />
+          </div>
+        </div>
+
+        <!-- Subir Foto del Pedido -->
+        <div class="pt-2">
+          <label class="block cursor-pointer">
+            <div class="w-full py-3 px-4 rounded-2xl border-2 border-dashed border-blushPink bg-peachCream/40 text-center text-xs font-extrabold text-blushPink hover:bg-peachCream transition">
+              📸 Subir Foto Real del Pedido a la Cuenta del Cliente
+            </div>
+            <input type="file" accept="image/*" class="hidden" onchange="adminUploadOrderPhoto(event)" />
+          </label>
+        </div>
+
+        <button onclick="adminSaveClientOrder()" class="w-full py-3.5 rounded-2xl bg-teddy hover:bg-teddyDark text-white font-extrabold text-xs uppercase tracking-wider gumi-shadow transition">
+          🔔 Guardar Cambios y Notificar al Cliente en Tiempo Real
+        </button>
+      </section>
+
+      <!-- MÓDULO 3: PERSONALIZACIÓN DE MARCA (@gumigumiland_n.n) Y CUENTA BANCARIA -->
+      <section class="bg-white rounded-3xl p-5 border border-orange-200 gumi-shadow space-y-3.5">
+        <h3 class="font-extrabold text-sm text-espresso uppercase tracking-wider">🎨 3. Configuración Global de Gumi Gumiland</h3>
+        
+        <div>
+          <label class="text-xs font-bold text-mocha">Subir Foto de Perfil Oficial de @gumigumiland_n.n (Opcional):</label>
+          <input type="file" accept="image/*" onchange="adminUploadBrandLogo(event)" class="w-full mt-1 text-xs text-mocha file:mr-3 file:py-2 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-extrabold file:bg-peachCream file:text-blushPink" />
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label class="text-xs font-bold text-mocha">Cuenta CLABE / Tarjeta Oficial:</label>
+            <input id="adminGlobalClabe" type="text" class="w-full mt-1 bg-vanilla border border-orange-200 rounded-xl px-3 py-2 text-xs font-mono font-bold" />
+          </div>
+          <div>
+            <label class="text-xs font-bold text-mocha">WhatsApp del Negocio (10 dígitos):</label>
+            <input id="adminGlobalWhatsapp" type="tel" class="w-full mt-1 bg-vanilla border border-orange-200 rounded-xl px-3 py-2 text-xs font-bold" />
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label class="text-xs font-bold text-mocha">Banco Receptor:</label>
+            <input id="adminGlobalBank" type="text" class="w-full mt-1 bg-vanilla border border-orange-200 rounded-xl px-3 py-2 text-xs font-bold" />
+          </div>
+          <div>
+            <label class="text-xs font-bold text-mocha">Cambiar Contraseña Maestra:</label>
+            <input id="adminGlobalPassword" type="text" class="w-full mt-1 bg-vanilla border border-orange-200 rounded-xl px-3 py-2 text-xs font-bold" />
+          </div>
+        </div>
+
+        <button onclick="adminSaveGlobalSettings()" class="w-full py-3 rounded-2xl bg-espresso text-white font-extrabold text-xs uppercase tracking-wider">
+          💾 Guardar Configuración del Negocio
+        </button>
+      </section>
+
+    </main>
+  </div>
+
+
+  <!-- =================================================================== -->
+  <!-- MODAL DEL CÓDIGO QR ÚNICO DEL CLIENTE                               -->
+  <!-- =================================================================== -->
+  <div id="clientQrModal" class="hidden fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-white rounded-[32px] max-w-xs w-full p-6 text-center gumi-shadow pop-in">
+      <span class="text-[10px] font-extrabold uppercase text-blushPink bg-peachCream px-3 py-1 rounded-full">
+        Código Único de Miembro
+      </span>
+      <h4 id="qrModalName" class="font-extrabold text-lg text-espresso mt-2">Sofía</h4>
+      <p class="text-xs text-mocha mb-4">Muestra este código a Gumi Gumiland para recibir tu sello de estambre.</p>
+      
+      <div class="bg-vanilla p-4 rounded-3xl border-2 border-orange-200 inline-block mb-3">
+        <img id="qrModalImg" src="" alt="Código QR Único" class="w-44 h-44 mx-auto rounded-xl" />
+      </div>
+      <p id="qrModalCodeText" class="font-mono font-extrabold text-sm text-teddy mb-4">GUMI-0000</p>
+
+      <button onclick="closeClientQRModal()" class="w-full py-3 rounded-2xl bg-espresso text-white font-extrabold text-xs uppercase">
+        Listo
+      </button>
+    </div>
+  </div>
+
+  <!-- MODAL DE AYUDA PARA INSTALAR APP EN EL TELÉFONO -->
+  <div id="installModal" class="hidden fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-white rounded-[32px] max-w-sm w-full p-6 gumi-shadow pop-in">
+      <h4 class="font-extrabold text-lg text-espresso mb-2">📲 Instala Gumi Club en tu Celular</h4>
+      <div class="space-y-3 text-xs text-mocha leading-relaxed">
+        <div class="bg-vanilla p-3.5 rounded-2xl border border-orange-100">
+          <p class="font-extrabold text-espresso mb-1">🍎 En iPhone (Safari):</p>
+          <p>1. Toca el botón <strong>Compartir</strong> (el cuadrito con la flecha hacia arriba en la barra inferior).</p>
+          <p>2. Selecciona <strong>"Agregar a la pantalla de inicio"</strong>.</p>
+        </div>
+        <div class="bg-vanilla p-3.5 rounded-2xl border border-orange-100">
+          <p class="font-extrabold text-espresso mb-1">🤖 En Android (Chrome):</p>
+          <p>1. Toca los <strong>3 puntitos (⋮)</strong> arriba a la derecha.</p>
+          <p>2. Toca <strong>"Instalar aplicación"</strong> o "Agregar a pantalla principal".</p>
+        </div>
+      </div>
+      <button onclick="document.getElementById('installModal').classList.add('hidden')" class="mt-4 w-full py-3 rounded-2xl bg-blushPink text-white font-extrabold text-xs uppercase">
+        ¡Entendido!
+      </button>
+    </div>
+  </div>
+
+
+  <!-- =================================================================== -->
+  <!-- MOTOR DE DATOS Y SINCRONIZACIÓN EN TIEMPO REAL                      -->
+  <!-- =================================================================== -->
+  <script>
+    const ORDER_STEPS = [
+      'Pedido confirmado (En fila de espera)',
+      'Tejiendo el cuerpo de tu Gumi 🧶',
+      'Bordando detalles y carita ✨',
+      '¡Sesión de fotos lista! Mira tu galería 📸',
+      '¡Tu Gumi está listo para entrega! 🎁'
+    ];
+
+    // Base de datos estructurada (Soporta múltiples clientes reales)
+    const INITIAL_DB = {
+      settings: {
+        adminEmail: 'admin@gumigumiland.com',
+        adminPass: 'gumi2026',
+        clabe: '012 180 01548963214 7',
+        bankName: 'BBVA / Nu México',
+        whatsapp: '5512345678',
+        brandLogo: ''
+      },
+      clients: {
+        '5512345678': {
+          phone: '5512345678',
+          name: 'Sofía Hernández 🌸',
+          qrId: 'GUMI-5678-SOF',
+          stamps: 3,
+          orderTitle: 'Osito Tejido Personalizado (22cm)',
+          orderDate: 'Entrega: Sáb 25 Oct',
+          orderStep: 3,
+          totalPrice: 680,
+          advancePrice: 340,
+          photos: [
+            'https://images.unsplash.com/photo-1559454403-b8fb88521f11?auto=format&fit=crop&w=600&q=80',
+            'https://images.unsplash.com/photo-1584992236310-6edddc08a327?auto=format&fit=crop&w=600&q=80'
+          ]
+        }
+      }
+    };
+
+    let db = JSON.parse(localStorage.getItem('gumiclub_prod_db')) || INITIAL_DB;
+    let currentSession = JSON.parse(localStorage.getItem('gumiclub_session')) || null;
+    let selectedAdminClientPhone = Object.keys(db.clients)[0] || null;
+    let html5QrScanner = null;
+
+    // Canal de Tiempo Real instantáneo entre pestañas/ventanas
+    const liveChannel = ('BroadcastChannel' in window) ? new BroadcastChannel('gumi_realtime_channel') : null;
+
+    if (liveChannel) {
+      liveChannel.onmessage = (event) => {
+        if (event.data && event.data.type === 'DB_UPDATED') {
+          db = JSON.parse(localStorage.getItem('gumiclub_prod_db')) || db;
+          refreshActiveViews();
+          if (currentSession?.role === 'CLIENT' && event.data.targetPhone === currentSession.phone) {
+            showToast(event.data.message || '🧸 ¡Gumi Gumiland actualizó tu tarjeta o pedido en vivo!');
+          }
+        }
+      };
+    }
+
+    window.addEventListener('storage', (e) => {
+      if (e.key === 'gumiclub_prod_db') {
+        db = JSON.parse(e.newValue) || db;
+        refreshActiveViews();
+      }
+    });
+
+    function saveDB(realtimeMessage = '', targetPhone = '') {
+      localStorage.setItem('gumiclub_prod_db', JSON.stringify(db));
+      if (liveChannel) {
+        liveChannel.postMessage({ type: 'DB_UPDATED', message: realtimeMessage, targetPhone });
+      }
+      refreshActiveViews();
+    }
+
+    // --- AUTENTICACIÓN (LOGIN CLIENTE Y LOGIN EMPRENDEDORA) ---
+    function switchAuthTab(tab) {
+      const clientForm = document.getElementById('clientAuthForm');
+      const adminForm = document.getElementById('adminAuthForm');
+      const clientBtn = document.getElementById('tabClientAuthBtn');
+      const adminBtn = document.getElementById('tabAdminAuthBtn');
+
+      if (tab === 'CLIENT') {
+        clientForm.classList.remove('hidden');
+        adminForm.classList.add('hidden');
+        clientBtn.className = 'py-2 rounded-xl text-xs font-extrabold bg-blushPink text-white shadow-sm transition';
+        adminBtn.className = 'py-2 rounded-xl text-xs font-extrabold text-mocha hover:text-espresso transition';
+      } else {
+        adminForm.classList.remove('hidden');
+        clientForm.classList.add('hidden');
+        adminBtn.className = 'py-2 rounded-xl text-xs font-extrabold bg-teddy text-white shadow-sm transition';
+        clientBtn.className = 'py-2 rounded-xl text-xs font-extrabold text-mocha hover:text-espresso transition';
+      }
+    }
+
+    function loginOrRegisterClient() {
+      const name = document.getElementById('loginClientName').value.trim();
+      const phone = document.getElementById('loginClientPhone').value.replace(/\D/g, '').trim();
+
+      if (!name || phone.length < 8) {
+        alert('Por favor ingresa tu nombre y tu número de WhatsApp (10 dígitos) para generar tu tarjeta y código QR único.');
+        return;
+      }
+
+      const isNewClient = !db.clients[phone];
+
+      if (isNewClient) {
+        const suffix = name.slice(0, 3).toUpperCase().replace(/[^A-Z]/g, 'G');
+        const uniqueQr = `GUMI-${phone.slice(-4)}-${suffix}`;
+        db.clients[phone] = {
+          phone,
+          name,
+          qrId: uniqueQr,
+          stamps: 1, // Sello #1 de bienvenida gratis
+          orderTitle: 'Próximo Amigurumi Gumi Gumiland',
+          orderDate: 'En espera de pedido',
+          orderStep: 0,
+          totalPrice: 0,
+          advancePrice: 0,
+          photos: [
+            'https://images.unsplash.com/photo-1559454403-b8fb88521f11?auto=format&fit=crop&w=600&q=80'
+          ]
+        };
+      } else {
+        db.clients[phone].name = name;
+      }
+
+      currentSession = { role: 'CLIENT', phone };
+      localStorage.setItem('gumiclub_session', JSON.stringify(currentSession));
+      saveDB();
+
+      if (isNewClient) {
+        showToast('🎁 ¡Bienvenida a Gumi Club! Recibiste tu Sello #1 de regalo.');
+      }
+    }
+
+    function loginAdmin() {
+      const email = document.getElementById('loginAdminEmail').value.trim().toLowerCase();
+      const pass = document.getElementById('loginAdminPass').value.trim();
+
+      if (email === db.settings.adminEmail.toLowerCase() && pass === db.settings.adminPass) {
+        currentSession = { role: 'ADMIN' };
+        localStorage.setItem('gumiclub_session', JSON.stringify(currentSession));
+        refreshActiveViews();
+        showToast('👑 Bienvenida al Panel Madre de Gumi Gumiland');
+      } else {
+        alert('Credenciales incorrectas. Verifica el correo y la contraseña maestra de emprendedora.');
+      }
+    }
+
+    function logout() {
+      stopCameraScanner();
+      currentSession = null;
+      localStorage.removeItem('gumiclub_session');
+      refreshActiveViews();
+    }
+
+    // --- RENDERIZADO DE PANTALLAS ---
+    function refreshActiveViews() {
+      applyBrandLogo();
+
+      const authScreen = document.getElementById('authScreen');
+      const clientWrapper = document.getElementById('clientAppWrapper');
+      const adminWrapper = document.getElementById('adminAppWrapper');
+
+      if (!currentSession) {
+        authScreen.classList.remove('hidden');
+        clientWrapper.classList.add('hidden');
+        adminWrapper.classList.add('hidden');
+        return;
+      }
+
+      authScreen.classList.add('hidden');
+
+      if (currentSession.role === 'CLIENT') {
+        adminWrapper.classList.add('hidden');
+        clientWrapper.classList.remove('hidden');
+        renderClientScreen();
+      } else if (currentSession.role === 'ADMIN') {
+        clientWrapper.classList.add('hidden');
+        adminWrapper.classList.remove('hidden');
+        renderAdminScreen();
+      }
+    }
+
+    function renderClientScreen() {
+      const client = db.clients[currentSession.phone];
+      if (!client) return logout();
+
+      document.getElementById('headerClientName').innerText = `Hola, ${client.name}`;
+      document.getElementById('cardBannerName').innerText = client.name;
+      document.getElementById('cardBannerId').innerText = client.qrId;
+      document.getElementById('clientStampCount').innerText = `${client.stamps} / 10`;
+
+      // Renderizar las 10 casillas con el Osito Tejido
+      const grid = document.getElementById('clientStampsGrid');
+      grid.innerHTML = '';
+      for (let i = 1; i <= 10; i++) {
+        const filled = i <= client.stamps;
+        const isGoal = i === 10;
+        grid.innerHTML += `
+          <div class="aspect-square rounded-2xl flex flex-col items-center justify-center border-2 transition-all ${
+            filled
+              ? 'bg-blushPink border-blushPink text-white pop-in shadow-md'
+              : isGoal
+                ? 'bg-amber-50 border-dashed border-teddy text-teddy'
+                : 'bg-vanilla border-orange-100 text-orange-200'
+          }">
+            <span class="text-xl">${filled ? '🧸' : isGoal ? '🎁' : '🧶'}</span>
+            <span class="text-[10px] font-extrabold mt-0.5">${isGoal ? 'GRATIS' : '#' + i}</span>
+          </div>
+        `;
+      }
+
+      const rewardBox = document.getElementById('clientRewardBox');
+      if (client.stamps >= 10) rewardBox.classList.remove('hidden');
+      else rewardBox.classList.add('hidden');
+
+      // Renderizar Tracker de Pedido
+      document.getElementById('clientOrderTitle').innerText = client.orderTitle;
+      document.getElementById('clientOrderDate').innerText = client.orderDate;
+
+      const stepsBox = document.getElementById('clientTrackerSteps');
+      stepsBox.innerHTML = ORDER_STEPS.map((label, idx) => {
+        const done = idx <= client.orderStep;
+        const active = idx === client.orderStep;
+        return `
+          <div class="flex items-center gap-3">
+            <div class="w-7 h-7 rounded-full flex items-center justify-center text-xs font-extrabold shrink-0 ${
+              done ? 'bg-blushPink text-white shadow-sm' : 'bg-vanilla border border-orange-200 text-mocha'
+            }">
+              ${done ? '✓' : idx + 1}
+            </div>
+            <p class="text-xs ${active ? 'font-extrabold text-blushPink' : done ? 'font-bold text-espresso' : 'text-mocha opacity-70'}">
+              ${label}
+            </p>
+          </div>
+        `;
+      }).join('');
+
+      // Renderizar Galería de Fotos
+      const photosBox = document.getElementById('clientPhotosContainer');
+      photosBox.innerHTML = (client.photos || []).map((src, i) => `
+        <a href="${src}" target="_blank" class="relative shrink-0 w-44 h-44 rounded-2xl overflow-hidden border border-orange-100 gumi-shadow block">
+          <img src="${src}" class="w-full h-full object-cover" alt="Foto Amigurumi" />
+          <span class="absolute bottom-2 left-2 bg-black/55 backdrop-blur-sm text-white text-[10px] font-bold px-2.5 py-0.5 rounded-full">
+            Foto #${i + 1}
+          </span>
+        </a>
+      `).join('');
+
+      // Renderizar Liquidación
+      const pending = Math.max(0, (client.totalPrice || 0) - (client.advancePrice || 0));
+      document.getElementById('clientTotalPay').innerText = `$${client.totalPrice || 0}`;
+      document.getElementById('clientAdvancePay').innerText = `$${client.advancePrice || 0}`;
+      document.getElementById('clientPendingPay').innerText = `$${pending}`;
+      document.getElementById('clientBankName').innerText = db.settings.bankName;
+      document.getElementById('clientClabeNumber').innerText = db.settings.clabe;
+
+      // Certificado
+      document.getElementById('certGumiName').innerText = client.orderTitle;
+      document.getElementById('certOwnerName').innerText = client.name;
+    }
+
+    function switchClientTab(tabName) {
+      ['card', 'order', 'pay', 'club'].forEach(t => {
+        document.getElementById(`clientTab-${t}`).classList.toggle('hidden', t !== tabName);
+        const btn = document.getElementById(`navBtn-${t}`);
+        if (t === tabName) {
+          btn.className = 'flex flex-col items-center py-1.5 rounded-2xl text-blushPink bg-peachCream font-extrabold text-[11px] transition';
+        } else {
+          btn.className = 'flex flex-col items-center py-1.5 rounded-2xl text-mocha font-bold text-[11px] transition';
+        }
+      });
+    }
+
+    function openClientQRModal() {
+      const client = db.clients[currentSession.phone];
+      if (!client) return;
+      document.getElementById('qrModalName').innerText = client.name;
+      document.getElementById('qrModalCodeText').innerText = client.qrId;
+      document.getElementById('qrModalImg').src = `https://api.qrserver.com/v1/create-qr-code/?size=220x220&color=3E2723&bgcolor=FFFBF5&data=${encodeURIComponent(client.qrId)}`;
+      document.getElementById('clientQrModal').classList.remove('hidden');
+    }
+
+    function closeClientQRModal() {
+      document.getElementById('clientQrModal').classList.add('hidden');
+    }
+
+    // --- FUNCIONES DE LA APP MADRE (ADMINISTRADORA) ---
+    function renderAdminScreen() {
+      const selector = document.getElementById('adminClientSelector');
+      const phones = Object.keys(db.clients);
+      if (!selectedAdminClientPhone || !db.clients[selectedAdminClientPhone]) {
+        selectedAdminClientPhone = phones[0];
+      }
+
+      selector.innerHTML = phones.map(p => {
+        const c = db.clients[p];
+        return `<option value="${p}" ${p === selectedAdminClientPhone ? 'selected' : ''}>🧸 ${c.name} (${c.qrId}) — ${c.stamps}/10 sellos</option>`;
+      }).join('');
+
+      const c = db.clients[selectedAdminClientPhone];
+      if (c) {
+        document.getElementById('adminSelectedStamps').innerText = `${c.stamps} / 10`;
+        document.getElementById('adminSelectedQrId').innerText = c.qrId;
+        document.getElementById('adminOrderTitleInput').value = c.orderTitle;
+        document.getElementById('adminOrderDateInput').value = c.orderDate;
+        document.getElementById('adminOrderStepInput').value = c.orderStep;
+        document.getElementById('adminTotalInput').value = c.totalPrice;
+        document.getElementById('adminAdvanceInput').value = c.advancePrice;
+      }
+
+      document.getElementById('adminGlobalClabe').value = db.settings.clabe;
+      document.getElementById('adminGlobalWhatsapp').value = db.settings.whatsapp;
+      document.getElementById('adminGlobalBank').value = db.settings.bankName;
+      document.getElementById('adminGlobalPassword').value = db.settings.adminPass;
+    }
+
+    function selectAdminClient(phone) {
+      selectedAdminClientPhone = phone;
+      renderAdminScreen();
+    }
+
+    function adminAddStampToSelected() {
+      const c = db.clients[selectedAdminClientPhone];
+      if (!c) return;
+      if (c.stamps < 10) {
+        c.stamps += 1;
+        const msg = c.stamps === 10
+          ? '🎁 ¡Felicidades! Completaste tus 10 sellos en Gumi Club. ¡Tienes un Mini-Gumi gratis!'
+          : `🧸 ¡Se agregó el Sello #${c.stamps} a tu tarjeta Gumi Club!`;
+        saveDB(msg, c.phone);
+        showToast(`✅ Sello #${c.stamps} aplicado a ${c.name}`);
+      } else {
+        alert('Esta clienta ya tiene los 10 sellos completos. Presiona "Canjear / 0" tras entregarle su regalo.');
+      }
+    }
+
+    function adminResetSelectedStamps() {
+      const c = db.clients[selectedAdminClientPhone];
+      if (!c) return;
+      c.stamps = 0;
+      saveDB('✨ ¡Premio entregado! Tu nueva tarjeta Gumi Club está lista.', c.phone);
+      showToast(`🔄 Tarjeta reiniciada para ${c.name}`);
+    }
+
+    function adminSaveClientOrder() {
+      const c = db.clients[selectedAdminClientPhone];
+      if (!c) return;
+      c.orderTitle = document.getElementById('adminOrderTitleInput').value.trim();
+      c.orderDate = document.getElementById('adminOrderDateInput').value.trim();
+      c.orderStep = parseInt(document.getElementById('adminOrderStepInput').value, 10);
+      c.totalPrice = parseFloat(document.getElementById('adminTotalInput').value) || 0;
+      c.advancePrice = parseFloat(document.getElementById('adminAdvanceInput').value) || 0;
+
+      const stepText = ORDER_STEPS[c.orderStep];
+      saveDB(`📦 Tu pedido "${c.orderTitle}" avanzó a: ${stepText}`, c.phone);
+      showToast(`🔔 Pedido actualizado y notificado a ${c.name}`);
+    }
+
+    function adminUploadOrderPhoto(event) {
+      const file = event.target.files[0];
+      const c = db.clients[selectedAdminClientPhone];
+      if (!file || !c) return;
+
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        c.photos.unshift(e.target.result);
+        c.orderStep = 3; // Pasa automáticamente a "Sesión de fotos lista"
+        saveDB('📸 ¡Subimos fotos nuevas de tu pedido! Entra a Gumi Club para verlas.', c.phone);
+        showToast(`📸 Foto subida con éxito al pedido de ${c.name}`);
+      };
+      reader.readAsDataURL(file);
+    }
+
+    function adminUploadBrandLogo(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        db.settings.brandLogo = e.target.result;
+        saveDB('🎨 Logo oficial actualizado');
+        showToast('✅ Foto de perfil de @gumigumiland_n.n integrada en la app.');
+      };
+      reader.readAsDataURL(file);
+    }
+
+    function applyBrandLogo() {
+      const logo = db.settings.brandLogo;
+      const authImg = document.getElementById('customBrandLogoAuth');
+      const authSvg = document.getElementById('defaultBearLogoAuth');
+      const headImg = document.getElementById('customBrandLogoHeader');
+      const headBear = document.getElementById('defaultBearHeader');
+
+      if (logo) {
+        authImg.src = logo;
+        authImg.classList.remove('hidden');
+        authSvg.classList.add('hidden');
+        headImg.src = logo;
+        headImg.classList.remove('hidden');
+        headBear.classList.add('hidden');
+      }
+    }
+
+    function adminSaveGlobalSettings() {
+      db.settings.clabe = document.getElementById('adminGlobalClabe').value.trim();
+      db.settings.whatsapp = document.getElementById('adminGlobalWhatsapp').value.trim();
+      db.settings.bankName = document.getElementById('adminGlobalBank').value.trim();
+      db.settings.adminPass = document.getElementById('adminGlobalPassword').value.trim() || 'gumi2026';
+      saveDB();
+      showToast('💾 Configuración global de Gumi Gumiland guardada.');
+    }
+
+    // --- ESCÁNER DE CÁMARA REAL PARA LEER EL QR DEL CLIENTE ---
+    function toggleCameraScanner() {
+      const box = document.getElementById('qrReaderBox');
+      if (!box.classList.contains('hidden')) {
+        stopCameraScanner();
+        return;
+      }
+      box.classList.remove('hidden');
+      html5QrScanner = new Html5Qrcode("qr-reader");
+      html5QrScanner.start(
+        { facingMode: "environment" },
+        { fps: 10, qrbox: { width: 220, height: 220 } },
+        (decodedText) => {
+          // Buscar al cliente por su qrId
+          const foundPhone = Object.keys(db.clients).find(
+            p => db.clients[p].qrId.toUpperCase() === decodedText.trim().toUpperCase()
+          );
+          if (foundPhone) {
+            stopCameraScanner();
+            selectedAdminClientPhone = foundPhone;
+            adminAddStampToSelected();
+          } else {
+            alert(`Código leído (${decodedText}), pero no coincide con ningún cliente registrado.`);
+          }
+        },
+        () => {}
+      ).catch(() => {
+        alert('No se pudo abrir la cámara. Asegúrate de dar permiso de cámara en el navegador.');
+        box.classList.add('hidden');
+      });
+    }
+
+    function stopCameraScanner() {
+      const box = document.getElementById('qrReaderBox');
+      box.classList.add('hidden');
+      if (html5QrScanner) {
+        html5QrScanner.stop().then(() => html5QrScanner.clear()).catch(() => {});
+        html5QrScanner = null;
+      }
+    }
+
+    // --- UTILIDADES DEL CLIENTE ---
+    function copyBankClabe() {
+      navigator.clipboard.writeText(db.settings.clabe);
+      showToast('✅ Cuenta CLABE copiada al portapapeles.');
+    }
+
+    function openWhatsAppDirect() {
+      const c = db.clients[currentSession.phone];
+      if (!c) return;
+      const pending = Math.max(0, (c.totalPrice || 0) - (c.advancePrice || 0));
+      const text = encodeURIComponent(
+        `¡Hola Gumi Gumiland! 🧸🌸 Soy ${c.name} (ID: ${c.qrId}). Te escribo desde la app Gumi Club por mi pedido "${c.orderTitle}" (Saldo por liquidar: $${pending}).`
+      );
+      window.open(`https://wa.me/52${db.settings.whatsapp}?text=${text}`, '_blank');
+    }
+
+    function showInstallHelp() {
+      document.getElementById('installModal').classList.remove('hidden');
+    }
+
+    function showToast(msg) {
+      const toast = document.getElementById('pushToast');
+      document.getElementById('pushToastText').innerText = msg;
+      toast.classList.remove('hidden');
+      setTimeout(() => toast.classList.add('hidden'), 5000);
+    }
+
+    function hideToast() {
+      document.getElementById('pushToast').classList.add('hidden');
+    }
+
+    // Inicializar aplicación
+    if (!localStorage.getItem('gumiclub_prod_db')) {
+      localStorage.setItem('gumiclub_prod_db', JSON.stringify(db));
+    }
+    refreshActiveViews();
+  </script>
+</body>
+</html>
